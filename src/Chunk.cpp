@@ -59,7 +59,11 @@ void Chunk::setTile(int x, int y, int z, TileID id) {
     if (!inBounds(x, y, z)) {
         return;
     }
-    m_tiles[index(x, y, z)] = id;
+    TileID& current = m_tiles[index(x, y, z)];
+    if (current == id) {
+        return;
+    }
+    current = id;
     m_dirty = true;
 }
 

@@ -39,9 +39,28 @@ std::uint64_t World::key(int chunkX, int chunkZ) {
            static_cast<std::uint32_t>(chunkZ);
 }
 
+Chunk* World::chunkAt(int chunkX, int chunkZ) {
+    auto it = m_chunks.find(key(chunkX, chunkZ));
+    return it == m_chunks.end() ? nullptr : it->second.get();
+}
+
 const Chunk* World::chunkAt(int chunkX, int chunkZ) const {
     auto it = m_chunks.find(key(chunkX, chunkZ));
     return it == m_chunks.end() ? nullptr : it->second.get();
+}
+
+bool World::setTile(int worldX, int worldY, int worldZ, TileID id) {
+    if (worldY < 0 || worldY >= Chunk::kHeight) {
+        return false;
+    }
+
+    Chunk* chunk = chunkAt(floorDiv(worldX, Chunk::kWidth), floorDiv(worldZ, Chunk::kDepth));
+    if (!chunk) {
+        return false;
+    }
+
+    chunk->setTile(floorMod(worldX, Chunk::kWidth), worldY, floorMod(worldZ, Chunk::kDepth), id);
+    return true;
 }
 
 int World::surfaceHeight(int worldX, int worldZ) const {

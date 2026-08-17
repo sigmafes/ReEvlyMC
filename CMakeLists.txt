@@ -19,6 +19,7 @@ add_executable(EvlyMC
     src/Tile.cpp
     src/Chunk.cpp
     src/World.cpp
+    src/Player.cpp
 )
 
 target_include_directories(EvlyMC PRIVATE src external)

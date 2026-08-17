@@ -19,8 +19,10 @@ public:
     void draw(const glm::vec3& cameraPosition, float maxDistance) const;
 
     TileID tileAt(int worldX, int worldY, int worldZ) const;
+    bool setTile(int worldX, int worldY, int worldZ, TileID id);
     int surfaceHeight(int worldX, int worldZ) const;
 
+    Chunk* chunkAt(int chunkX, int chunkZ);
     const Chunk* chunkAt(int chunkX, int chunkZ) const;
     int renderDistance() const { return m_renderDistance; }
     std::size_t chunkCount() const { return m_chunks.size(); }

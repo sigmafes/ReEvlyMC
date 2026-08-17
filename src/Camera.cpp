@@ -38,7 +38,8 @@ void Camera::processKeyboard(GLFWwindow* window, float deltaTime) {
 
 void Camera::processMouse(float xOffset, float yOffset) {
     m_yaw += xOffset * m_sensitivity;
-    m_pitch = std::clamp(m_pitch + yOffset * m_sensitivity, -89.0f, 89.0f);
+    // Clamp below 90 to avoid gimbal-lock / zero-length right vector when looking straight up/down.
+    m_pitch = std::clamp(m_pitch + yOffset * m_sensitivity, -85.0f, 85.0f);
     updateVectors();
 }
 

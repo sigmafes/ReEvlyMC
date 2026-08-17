@@ -10,6 +10,7 @@
 
 #include "Camera.h"
 #include "Chunk.h"
+#include "Player.h"
 #include "Window.h"
 #include "World.h"
 
@@ -88,31 +89,50 @@ GLuint createShaderProgram() {
     return program;
 }
 
-struct MouseState {
-    Camera* camera = nullptr;
+struct InputState {
+    Player* player = nullptr;
+    World* world = nullptr;
     double lastX = 0.0;
     double lastY = 0.0;
     bool firstMove = true;
 };
 
-MouseState g_mouse;
+InputState g_input;
 
 void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
     (void)window;
-    if (!g_mouse.camera) {
+    if (!g_input.player) {
         return;
     }
-    if (g_mouse.firstMove) {
-        g_mouse.lastX = xpos;
-        g_mouse.lastY = ypos;
-        g_mouse.firstMove = false;
+    if (g_input.firstMove) {
+        g_input.lastX = xpos;
+        g_input.lastY = ypos;
+        g_input.firstMove = false;
     }
 
-    const float xOffset = static_cast<float>(xpos - g_mouse.lastX);
-    const float yOffset = static_cast<float>(g_mouse.lastY - ypos);
-    g_mouse.lastX = xpos;
-    g_mouse.lastY = ypos;
-    g_mouse.camera->processMouse(xOffset, yOffset);
+    const float xOffset = static_cast<float>(xpos - g_input.lastX);
+    const float yOffset = static_cast<float>(g_input.lastY - ypos);
+    g_input.lastX = xpos;
+    g_input.lastY = ypos;
+    g_input.player->processMouse(xOffset, yOffset);
+}
+
+void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+    (void)window;
+    (void)mods;
+    if (!g_input.player || !g_input.world || action != GLFW_PRESS) {
+        return;
+    }
+
+    if (button == GLFW_MOUSE_BUTTON_LEFT) {
+        if (g_input.player->breakBlock(*g_input.world)) {
+            g_input.world->buildMeshes();
+        }
+    } else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+        if (g_input.player->placeBlock(*g_input.world)) {
+            g_input.world->buildMeshes();
+        }
+    }
 }
 
 int envInt(const char* name, int fallback) {
@@ -155,9 +175,11 @@ int main() {
         world.buildMeshes();
         std::cout << "Generated " << world.chunkCount() << " chunks (seed " << seed << ")\n";
 
-        Camera camera(glm::vec3(8.0f, world.surfaceHeight(8, 8) + 12.0f, 8.0f));
-        g_mouse.camera = &camera;
+        Player player(glm::vec3(8.0f, world.surfaceHeight(8, 8) + 12.0f, 8.0f));
+        g_input.player = &player;
+        g_input.world = &world;
         glfwSetCursorPosCallback(window.handle(), cursorPosCallback);
+        glfwSetMouseButtonCallback(window.handle(), mouseButtonCallback);
 
         const glm::vec3 skyColor(0.53f, 0.74f, 0.94f);
         const float viewDistance = static_cast<float>(renderDistance * Chunk::kWidth);
@@ -174,12 +196,15 @@ int main() {
             if (glfwGetKey(window.handle(), GLFW_KEY_ESCAPE) == GLFW_PRESS) {
                 window.close();
             }
-            camera.processKeyboard(window.handle(), deltaTime);
+
+            player.update(window.handle(), deltaTime, world);
+            world.buildMeshes();
 
             glClearColor(skyColor.r, skyColor.g, skyColor.b, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             glUseProgram(program);
+            const Camera& camera = player.camera();
             const glm::mat4 view = camera.viewMatrix();
             const glm::mat4 projection = camera.projectionMatrix(window.aspectRatio());
             glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(view));
