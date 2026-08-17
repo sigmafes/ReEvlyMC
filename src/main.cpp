@@ -4,7 +4,9 @@
 
 #include <cstdlib>
 #include <exception>
+#include <fstream>
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 
@@ -16,43 +18,20 @@
 
 namespace {
 
-constexpr const char* kVertexShader = R"(#version 330 core
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec3 aColor;
-
-uniform mat4 uView;
-uniform mat4 uProjection;
-
-out vec3 vColor;
-out float vDistance;
-
-void main() {
-    vec4 viewPos = uView * vec4(aPos, 1.0);
-    vDistance = length(viewPos.xyz);
-    vColor = aColor;
-    gl_Position = uProjection * viewPos;
+std::string loadFile(const char* path) {
+    std::ifstream file(path);
+    if (!file.is_open()) {
+        throw std::runtime_error(std::string("Failed to open ") + path);
+    }
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    return buffer.str();
 }
-)";
 
-constexpr const char* kFragmentShader = R"(#version 330 core
-in vec3 vColor;
-in float vDistance;
-
-uniform vec3 uFogColor;
-uniform float uFogStart;
-uniform float uFogEnd;
-
-out vec4 FragColor;
-
-void main() {
-    float fog = clamp((vDistance - uFogStart) / (uFogEnd - uFogStart), 0.0, 1.0);
-    FragColor = vec4(mix(vColor, uFogColor, fog), 1.0);
-}
-)";
-
-GLuint compileShader(GLenum type, const char* source) {
+GLuint compileShader(GLenum type, const std::string& source) {
     GLuint shader = glCreateShader(type);
-    glShaderSource(shader, 1, &source, nullptr);
+    const char* sourcePtr = source.c_str();
+    glShaderSource(shader, 1, &sourcePtr, nullptr);
     glCompileShader(shader);
 
     GLint success = GL_FALSE;
@@ -67,8 +46,11 @@ GLuint compileShader(GLenum type, const char* source) {
 }
 
 GLuint createShaderProgram() {
-    GLuint vertex = compileShader(GL_VERTEX_SHADER, kVertexShader);
-    GLuint fragment = compileShader(GL_FRAGMENT_SHADER, kFragmentShader);
+    const std::string vertexSource = loadFile("shaders/vertex.glsl");
+    const std::string fragmentSource = loadFile("shaders/fragment.glsl");
+
+    GLuint vertex = compileShader(GL_VERTEX_SHADER, vertexSource);
+    GLuint fragment = compileShader(GL_FRAGMENT_SHADER, fragmentSource);
 
     GLuint program = glCreateProgram();
     glAttachShader(program, vertex);

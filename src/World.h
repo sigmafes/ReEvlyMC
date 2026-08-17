@@ -20,7 +20,11 @@ public:
 
     TileID tileAt(int worldX, int worldY, int worldZ) const;
     bool setTile(int worldX, int worldY, int worldZ, TileID id);
+    std::uint8_t lightAt(int worldX, int worldY, int worldZ) const;
     int surfaceHeight(int worldX, int worldZ) const;
+
+    // Highest of sunlight and blocklight at the given block position.
+    float sampleLight(int worldX, int worldY, int worldZ) const;
 
     Chunk* chunkAt(int chunkX, int chunkZ);
     const Chunk* chunkAt(int chunkX, int chunkZ) const;
@@ -30,6 +34,9 @@ public:
 private:
     static std::uint64_t key(int chunkX, int chunkZ);
     void generateChunk(Chunk& chunk);
+    void propagateSunlight(Chunk& chunk);
+    void propagateBlocklight(Chunk& chunk);
+    void rebuildDirtyMeshes();
 
     int m_seed;
     int m_renderDistance;

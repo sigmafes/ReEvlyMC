@@ -29,6 +29,9 @@ if(TARGET glm::glm)
     target_link_libraries(EvlyMC PRIVATE glm::glm)
 endif()
 
+file(COPY shaders/vertex.glsl shaders/fragment.glsl
+     DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/shaders)
+
 if(UNIX AND NOT APPLE)
     target_link_libraries(EvlyMC PRIVATE dl pthread)
 endif()

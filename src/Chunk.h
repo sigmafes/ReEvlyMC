@@ -29,6 +29,13 @@ public:
     TileID tileAt(int x, int y, int z) const;
     void setTile(int x, int y, int z, TileID id);
 
+    std::uint8_t lightAt(int x, int y, int z) const;          // packed sunlight/blocklight
+    void setLightAt(int x, int y, int z, std::uint8_t packed);
+    int sunlightAt(int x, int y, int z) const;
+    void setSunlightAt(int x, int y, int z, int level);
+    int blocklightAt(int x, int y, int z) const;
+    void setBlocklightAt(int x, int y, int z, int level);
+
     // Rebuilds the CPU vertex buffer and uploads it to the GPU.
     void buildMesh(const World& world);
     void draw() const;
@@ -42,13 +49,15 @@ public:
     glm::vec3 center() const;
 
 private:
-    void appendFace(std::vector<float>& vertices, Face face, int x, int y, int z, TileID id) const;
+    void appendFace(std::vector<float>& vertices, Face face, int x, int y, int z,
+                    TileID id, const float cornerLights[4]) const;
     bool faceVisible(const World& world, int x, int y, int z, TileID self) const;
     void uploadMesh(const std::vector<float>& vertices);
 
     int m_chunkX;
     int m_chunkZ;
     std::vector<TileID> m_tiles;
+    std::vector<std::uint8_t> m_light;  // packed: high nibble = sunlight, low = blocklight
 
     GLuint m_vao = 0;
     GLuint m_vbo = 0;
