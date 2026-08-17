@@ -17,6 +17,12 @@ public:
     const glm::vec3& position() const { return m_position; }
     void setPosition(const glm::vec3& position) { m_position = position; }
 
+    const glm::vec3& front() const { return m_front; }
+    const glm::vec3& right() const { return m_right; }
+    const glm::vec3& up() const { return m_up; }
+    float yaw() const { return m_yaw; }
+    float pitch() const { return m_pitch; }
+
 private:
     void updateVectors();
 
